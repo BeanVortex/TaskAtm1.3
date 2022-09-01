@@ -13,17 +13,17 @@ import java.util.Optional;
 public class AccountService implements IAccountService{
 
     @Autowired
-    private AccountDao accountDao;
+    private AccountRepository accountRepository;
 
 
     @Override
     public Account save(Account account) {
-        return accountDao.save(account);
+        return accountRepository.save(account);
     }
 
     @Override
     public Account getByID(long accountId) {
-        Optional <Account> optionalAccount = accountDao.findById(accountId);
+        Optional <Account> optionalAccount = accountRepository.findById(accountId);
         if (optionalAccount.isEmpty()){
             throw new RuntimeException("Not Found");
         }
@@ -50,7 +50,7 @@ public class AccountService implements IAccountService{
 
     @Override
     public List<Account> getAll() {
-        return accountDao.findAll();
+        return accountRepository.findAll();
     }
 
     @Override
