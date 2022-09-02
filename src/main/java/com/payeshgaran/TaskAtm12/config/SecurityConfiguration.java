@@ -1,5 +1,6 @@
 package com.payeshgaran.TaskAtm12.config;
 
+import com.payeshgaran.TaskAtm12.Account.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,28 +12,19 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
-@EnableGlobalMethodSecurity(prePostEnabled = true,securedEnabled = true)
+@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-    private static final String DEFAULT_PASSWORD = new BCryptPasswordEncoder().encode("12345678");
+
+    private final AccountService accountService;
 
     @Autowired
-    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception{
-        auth.inMemoryAuthentication()
-                .withUser("user")
-                .password(DEFAULT_PASSWORD).roles("USER")
-                .and()
-                .withUser("admin")
-                .password(DEFAULT_PASSWORD).roles("ADMIN");
+    public SecurityConfiguration(AccountService accountService) {
+        this.accountService = accountService;
     }
 
 
-
-
-
-
-
-//    @Override
+    //    @Override
 //    protected void configure(HttpSecurity http) throws Exception {
 //        http.csrf().disable()
 //                .authorizeHttpRequests()
@@ -47,33 +39,36 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     //TODO delete comment and check login page
 
 
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(accountService).passwordEncoder(passwordEncoder());
+    }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .authorizeHttpRequests()
-                .antMatchers("/**").authenticated()
-                .antMatchers("/h2-console/**").permitAll() // for h2 console
+                .antMatchers("/h2-console")
+                .permitAll()
+
+                // ROLE_ prefix will be added by spring security
+                // You can do this with preAuthorize on methods. see MainController
+                .antMatchers("/only-user")
+                .hasAnyRole("USER")
+
+                .anyRequest().authenticated()
                 .and().formLogin().permitAll()
                 .and().logout().permitAll();
-                http.csrf().disable(); // for h2 console
-                http.headers().frameOptions().disable(); // for h2 console
+        http.csrf().disable(); // for h2 console
+        http.headers().frameOptions().disable(); // for h2 console
 
 
     }
 
 
-
-
-
-
-
-
-
-
     @Bean
-    public PasswordEncoder passwordEncoder (){
-        return new BCryptPasswordEncoder();
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(12);
     }
 
 

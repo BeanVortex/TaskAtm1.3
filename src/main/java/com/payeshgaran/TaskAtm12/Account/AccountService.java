@@ -3,6 +3,8 @@ package com.payeshgaran.TaskAtm12.Account;
 import com.payeshgaran.TaskAtm12.Transaction.Transaction;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,7 +12,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor // to add objects without initialization: private final AccountRepository accountRepository;
-public class AccountService implements IAccountService{
+public class AccountService implements IAccountService {
 
     @Autowired
     private AccountRepository accountRepository;
@@ -23,25 +25,13 @@ public class AccountService implements IAccountService{
 
     @Override
     public Account getByID(long accountId) {
-        Optional <Account> optionalAccount = accountRepository.findById(accountId);
-        if (optionalAccount.isEmpty()){
+        Optional<Account> optionalAccount = accountRepository.findById(accountId);
+        if (optionalAccount.isEmpty()) {
             throw new RuntimeException("Not Found");
         }
         return optionalAccount.get();
     }
 
-
-    @Override
-    public boolean checkLoginPasswordByAccountId(long accountId , long inputPassword) {
-        if ( getByID(accountId).getPassword().equals(inputPassword) ) return true;
-        else return false;
-    }
-
-    @Override
-    public boolean checkLoginPasswordByAccNumber(long accNumber, long inputPassword) {
-        if ( getByID(finAccIdByAccNumber(accNumber)).getPassword().equals(inputPassword)  ) return true;
-        else return false;
-    }
 
     @Override
     public long getBalance(long accountId) {
@@ -59,16 +49,16 @@ public class AccountService implements IAccountService{
     }
 
     @Override
-    public long finAccIdByAccNumber( long accNumber){
+    public long finAccIdByAccNumber(String accNumber) {
 
-        List <Account> accounts = getAll();
+        List<Account> accounts = getAll();
 
         long acountId = 0;
 
         accounts = getAll();
-        for (Account item: accounts){
-            if (item.getAccNumber()==accNumber){
-                acountId= item.getId();
+        for (Account item : accounts) {
+            if (item.getAccNumber().equals(accNumber)) {
+                acountId = item.getId();
             }
 
         }
@@ -76,6 +66,11 @@ public class AccountService implements IAccountService{
         return acountId;
 
 
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return accountRepository.findAccountByAccNumber(username);
     }
 
     //TODO Update methode
